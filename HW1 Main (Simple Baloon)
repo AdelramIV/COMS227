@@ -1,0 +1,212 @@
+package hw1;
+
+public class Balloon {
+	
+	//Given constants
+	private double HEAT_LOSS;
+	//Air inside the balloon
+	private double VOLUME_AIR;
+	private double GRAVITY;
+	//Gas constant
+	private double GAS_CONST;
+	//Standard pressure
+	private double STANDARD_PSI;
+	//Kelvin at 0 degrees celsius
+	private double KELVIN_0C;
+	
+	//Variables
+		//Temperature of air inside balloon
+	private double balloonTemp;
+		//Altitude of the balloon
+	private double altitude;
+		//Fuel left in the balloons burner
+	private double fuelRemaining;
+		//Rate at which the fuel is burning
+	private double burnRate;
+		//Mass of the balloon
+	private double balloonMass;
+		//Upwards velocity of the balloon
+	private double balloonVelocity;
+		//Length of the tether
+	private double tetherLength;
+		//Temperature of the air outside balloon
+	private double outsideTemp;
+		//Direction of the wind
+	private double currentDirection;
+		//Seconds passed since start of simulation
+	private int seconds;
+	
+	//Holding input for reset()
+		//Placeholder variable for input temperature
+	private double startTemp;
+		//Placeholder variable for input wind direction
+	private double startDirection;
+		
+	
+	 public Balloon(double airTemp, double windDirection)  {
+		//Constant definitions
+		 HEAT_LOSS = 0.1;
+		 VOLUME_AIR = 61234;
+		 GRAVITY = 9.81;
+		 GAS_CONST = 287.05;
+		 STANDARD_PSI = 1013.25;
+		 KELVIN_0C = 273.15;
+		 
+		 //Variable initialization
+		 balloonTemp = airTemp;
+		 outsideTemp = airTemp;
+		 altitude = 0;
+		 fuelRemaining = 0;
+		 burnRate = 0;
+		 balloonMass = 0;
+		 balloonVelocity = 0;
+		 tetherLength = 0;
+		 currentDirection = windDirection;
+		 seconds = 0;
+		 
+		 //Holding input for reset()
+		 startDirection = windDirection;
+		 startTemp = airTemp;
+	 }
+	 
+	 //@return remaining fuel that can be used to heat the air in the balloon
+	 public double getFuelRemaining() {
+		 return fuelRemaining;
+	 }
+	 
+	 //@Param remaining fuel that can be used to heat the air in the balloon
+	 public void setFuelRemaning(double fuel) {
+		 fuelRemaining = fuel;
+	 }
+	 
+	 //@return mass of the balloon
+	 public double getBalloonMass() {
+		 return balloonMass;
+	 }
+	 
+	 //@Param mass of the balloon
+	 public void setBalloonMass(double mass) {
+		 balloonMass = mass;
+	 }
+	 
+	 //@return outside air temperature
+	 public double getOutsideAirTemp() {
+		 return outsideTemp;
+	 }
+	 
+	 //@Param Outside air temperature
+	 public void setOutsideAirTemp(double temp) {
+		 outsideTemp = temp;
+	 }
+	 
+	 //@return fuel burn rate
+	 public double getFuelBurnRate() {
+		 return burnRate;
+	 }
+	 
+	 
+	 //@Param fuel burn rate
+	 public void setFuelBurnRate(double rate) {
+		 burnRate = rate;
+	 }
+	 
+	 
+	 //@return the current balloon temperature
+	 public double getBalloonTemp() {
+		 return balloonTemp;
+	 }
+	 
+	 
+	 //@Param balloon temperature
+	 public void setBalloonTemp(double temp) {
+		 balloonTemp = temp;
+	 }
+	 
+	 
+	 //@return the balloon velocity
+	 public double getVelocity() {
+		 return balloonVelocity;
+	 }
+	 
+	 //@return balloon altitude
+	 public double getAltitude() {
+		 return altitude;
+	 }
+	 
+	 //@return length of the tether
+	 public double getTetherLength() {
+		 return tetherLength;
+	 }
+	 
+	 //@return length of tether minus current altitude
+	 public double getTetherRemaining() {
+		 return tetherLength - altitude;
+	 }
+	 
+	 //@Param length of the tether
+	 public void setTetherLength(double Length) {
+		 tetherLength = Length;
+	 }
+	 
+	 //@return direction of the wind in degrees, a number between 0 (inclusive) and 360 (exclusive)
+	 public double getWindDirection() {
+		 return currentDirection;
+	 }
+	 
+	 //@Param Updates the wind direction
+	 public void changeWindDirection(double deg) {
+		currentDirection = ((currentDirection + deg)+360) % 360;
+	 }
+	 
+	 //@return number of minutes passed in the current simulation
+	 public long getMinutes() {
+		 return seconds / 60;
+	 }
+	 
+	 //@return number of seconds passed the number of full minutes
+	 public long getSeconds() {
+		 return seconds % 60;
+	 }
+	 
+	 //Represents 1 (one) second of simulated time passing
+	 public void update() { //FIXME
+		 seconds++;
+		 
+		 //Math for solving change in balloon temperature
+		 double changeInTemp = Math.min(burnRate , fuelRemaining) + (outsideTemp - balloonTemp) * HEAT_LOSS;
+		 
+		 //Adjusts balloon temperature
+		 balloonTemp = balloonTemp + changeInTemp;
+		 
+		 //Math for solving altitude
+		 double densityAir = STANDARD_PSI / (GAS_CONST * (outsideTemp + KELVIN_0C));
+		 double densityBalloon = STANDARD_PSI / (GAS_CONST * (balloonTemp + KELVIN_0C));
+		 double liftForce = VOLUME_AIR * (densityAir - densityBalloon ) * GRAVITY;
+		 double netForce = liftForce - (balloonMass * GRAVITY);
+		 double netAcceleration = netForce / balloonMass;
+		 
+		 //Updates amount of fuel left taking into account it cannot burn past 0
+		 fuelRemaining = Math.max(fuelRemaining - burnRate , 0);
+		 
+		 //Updates the velocity and altitude of the balloon
+		 balloonVelocity = balloonVelocity + netAcceleration;
+		 altitude = Math.max(Math.min((altitude + balloonVelocity),tetherLength), 0);
+		 
+		 
+		 
+	 }
+	 
+	 //Resets the simulation to the initial state
+	 public void reset() {
+		 balloonTemp = startTemp;
+		 outsideTemp = startTemp;
+		 altitude = 0;
+		 fuelRemaining = 0;
+		 burnRate = 0;
+		 balloonMass = 0;
+		 balloonVelocity = 0;
+		 tetherLength = 0;
+		 currentDirection = startDirection;
+		 seconds = 0; 
+	 }
+}
