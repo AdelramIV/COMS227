@@ -1,0 +1,423 @@
+
+package hw2;
+
+/**
+ * Models a simplified baseball-like game called Fuzzball.
+ * 
+ * @author Garrett Brix
+ */
+public class FuzzballGame {
+  /**
+   * Number of strikes causing a player to be out.
+   */
+  public static final int MAX_STRIKES = 2;
+
+  /**
+   * Number of balls causing a player to walk.
+   */
+  public static final int MAX_BALLS = 5;
+
+  /**
+   * Number of outs before the teams switch.
+   */
+  public static final int MAX_OUTS = 3;
+  
+  /**
+   * Tracks the current score of team 0.
+   */
+  private int team0Score;
+  
+  /**
+   * Tracks the current score of team 1.
+   */
+  private int team1Score;
+  
+  /**
+   * Tracks the current inning up to the max.
+   */
+  private int currInning;
+  
+  /**
+   * Tracks which team is currently batting in the top or bottom inning.
+   */
+  private boolean topInning;
+  
+  /**
+   * Tracks number of strikes the current batter has.
+   */
+  private int numStrikes;
+  
+  /**
+   * Tracks number of outs the current team has.
+   */
+  private int numOuts;
+  
+  /**
+   * Tracks number of balls the current batter has.
+   */
+  private int numBalls;
+  
+  /**
+   * Tracks if the number of innings has reached its max (the game is over)
+   */
+  private boolean gameOver;
+  
+  /**
+   * Tracks if bases 1 2 and 3 are occupied by a runner
+   */
+  private boolean base1;
+  private boolean base2;
+  private boolean base3;
+  
+  private int maxInnings;
+  
+  
+  /**
+   * Main constructor of FuzzballGame initializing instance variables
+   * @param givenNumInnings
+   */
+  public FuzzballGame(int givenNumInnings) {
+	  team0Score = 0;
+	  team1Score = 0;
+	  
+	  currInning = 1;
+	  topInning = true;
+	  gameOver = false;
+	  
+	  numStrikes = 0;
+	  numOuts = 0;
+	  numBalls = 0;
+	  
+	  base1 = false;
+	  base2 = false;
+	  base3 = false;
+	  
+	  maxInnings = givenNumInnings;
+	  
+  }
+  
+  /**
+   * Adds one ball to the count and if the batter has 
+   * MAX_BALLS they walk and a new batter is up
+   */
+  public void ball() {
+	  if(!gameOver) {
+		  numBalls++;
+		  if(numBalls == MAX_BALLS) {
+			  if(base3 && base2 && base1) {
+				  if(topInning) {
+					  team0Score++;
+				  }
+				  else {
+					  team1Score++;
+				  }
+			  }
+			  else if(base2 && base1) {
+				  base3 = true;
+			  }
+			  else if(base1) {
+				  base2 = true;
+			  }
+			  base1 = true;
+			  newBatter();
+	  		}
+	 }
+  }
+  
+  /**
+   * Simulates the ball being caught by one of the catchers (batter is out)
+   */
+  public void caughtFly() {
+	  if(!gameOver) {
+	  numOuts++;
+	  newBatter();
+	  }
+  }
+  
+  /**
+   * returns true if the game is over (the current number of innings > MAX_INNINGS)
+   * @return
+   */
+  public boolean gameEnded() {
+	  if(currInning >= maxInnings) {
+		  currInning = maxInnings;
+		  gameOver = true;
+	  }
+	  return gameOver;
+  }
+  
+  /**
+   * returns the number of balls the current batter has
+   * @return
+   */
+  public int getBallCount() {
+	  return numBalls;
+  }
+  
+  /**
+   * Returns the current number of strikes the current batter has
+   * @return
+   */
+  public int getCalledStrikes() {
+	  return numStrikes;
+  }
+  
+  /**
+   * returns the current number of outs of the batting team
+   * @return
+   */
+  public int getCurrentOuts() {
+	  return numOuts;
+  }
+  
+  /**
+   * Returns the current score of team 0
+   * @return
+   */
+  public int getTeam0Score() {
+	  return team0Score;
+  }
+  
+  /**
+   * Returns the current score of team1
+   * @return team1Score
+   */
+  public int getTeam1Score() {
+	  return team1Score;
+  }
+  
+  /**
+   * Simulates the ball being hit a given distance and effects the game state based on said distance
+   * @param distance
+   */
+  public void hit(int distance) {
+	  if(!gameOver) {
+		  if(distance < 15) {
+			  numOuts++;
+			  newBatter();
+		  }
+		  else if(distance < 150) {
+			  shiftRunners(1);
+			  newBatter();
+		  }
+		  else if(distance < 200) {
+			  shiftRunners(2);
+			  newBatter();
+		  }
+		  else if(distance < 250) {
+			  shiftRunners(3);
+			  newBatter();
+		  }
+		  else if(distance >= 250 ) {
+			  shiftRunners(4);
+			  newBatter();
+		  }
+	  }
+  }
+  
+  /**
+   * returns true if it is the top of an inning (Team 0 batting) false otherwise
+   * @return
+   */
+  public boolean isTopOfInning() {
+	  return topInning;
+  }
+  
+  /**
+   * returns true if there is a runner on base(which)
+   * @param which
+   * @return base1, base2, base3
+   */
+  public boolean runnerOnBase(int which) {
+	  if(which == 1) {
+		  return base1;
+	  }
+	  else if(which == 2) {
+		  return base2;
+	  }
+	  else{
+		  return base3;
+	  }
+  }
+  
+  /**
+   * 
+   */
+  private void shiftRunners(int advance) {
+	  if(!gameOver) {
+		  if(runnerOnBase(3)) {
+			  base3 = false;
+			  if(topInning) {
+				  team0Score++;
+			  }
+			  else {
+				  team1Score++;
+			  }
+		  }
+		  if(runnerOnBase(2)) {
+			  if(advance == 1) {
+				  base2 = false;
+				  base3 = true;
+			  }
+			  else if(advance >= 2) {
+				  base2 = false;
+				  if(topInning) {
+					  team0Score++;
+				  }
+				  else {
+					  team1Score++;
+				  }
+			  }
+			  else {
+				  if(topInning) {
+					  team0Score++;
+				  }
+				  else {
+					  team1Score++;
+				  }
+			  }
+		  }
+		  if(runnerOnBase(1)) {
+			  if(advance == 1) {
+				  base1 = false;
+				  base2 = true;
+			  }
+			  else if(advance == 2) {
+				  base1 = false;
+				  base3 = true;
+			  }
+			  else if(advance == 3) {
+				  base1 = false;
+				  if(topInning) {
+					  team0Score++;
+				  }
+				  else {
+					  team1Score++;
+				  }
+			  }
+			  else {
+				  if(topInning) {
+					  team0Score++;
+				  }
+				  else {
+					  team1Score++;
+				  }
+			  }
+		  }
+		  if(advance == 1) {
+			  base1 = true;
+		  }
+		  else if(advance == 2) {
+			  base2 = true;
+		  }
+		  else if(advance == 3) {
+			  base3 = true;
+		  }
+		  else {
+			  if(topInning) {
+				  team0Score++;
+			  }
+			  else {
+				  team1Score++;
+			  }
+		  }
+	  }
+  }
+  
+  /**
+   * adds a strike if the batter did not swing or out if the they did
+   * if the number of strikes = MAX_STRIKES the batter is out
+   * @param swung
+   */
+  public void strike(boolean swung) {
+	  if(!gameOver) {
+		  if(swung) {
+			  numOuts++;
+			  newBatter();
+		  }
+		  else{
+			  numStrikes++;
+			  if(numStrikes == 2) {
+				  numOuts++;
+				  newBatter();
+			  }
+		  }
+	  }
+  }
+  
+  private void newBatter() {
+	  if(!gameOver) {
+		  if(numOuts == MAX_OUTS) {
+			  numStrikes = 0;
+			  numBalls = 0;
+			  if(topInning) {
+				  topInning = false;
+			  }
+			  else {
+				  topInning = true;
+				  currInning++;
+			  }
+			  numOuts = 0;
+			  base1 = false;
+			  base2 = false;
+			  base3 = false;
+		  }
+		  else {
+			  numStrikes = 0;
+			  numBalls = 0;
+		  }
+	  }
+  }
+  
+  /**
+   * Returns the current inning in the game
+   * @return currInning
+   */
+  public int whichInning() {
+	  if(currInning > maxInnings) {
+		  currInning = maxInnings + 1;
+		  gameOver = true;
+	  }
+	  return currInning;
+  }
+  
+  
+  // The methods below are provided for you and you should not modify them.
+  // The compile errors will go away after you have written stubs for the
+  // rest of the API methods.
+  /**
+   * Returns a three-character string representing the players on base, in the
+   * order first, second, and third, where 'X' indicates a player is present and
+   * 'o' indicates no player. For example, the string "oXX" means that there are
+   * players on second and third but not on first.
+   * 
+   * @return three-character string showing players on base
+   */
+  public String getBases()
+  {
+    return (runnerOnBase(1) ? "X" : "o") + (runnerOnBase(2) ? "X" : "o")
+        + (runnerOnBase(3) ? "X" : "o");
+  }
+
+  /**
+   * Returns a one-line string representation of the current game state. The
+   * format is:
+   * <pre>
+   *      ooo Inning:1 [T] Score:0-0 Balls:0 Strikes:0 Outs:0
+   * </pre>
+   * The first three characters represent the players on base as returned by the
+   * <code>getBases()</code> method. The 'T' after the inning number indicates
+   * it's the top of the inning, and a 'B' would indicate the bottom. The score always
+   * shows team 0 first.
+   * 
+   * @return a single line string representation of the state of the game
+   */
+  public String toString()
+  {
+    String bases = getBases();
+    String topOrBottom = (isTopOfInning() ? "T" : "B");
+    String fmt = "%s Inning:%d [%s] Score:%d-%d Balls:%d Strikes:%d Outs:%d";
+    return String.format(fmt, bases, whichInning(), topOrBottom, getTeam0Score(),
+        getTeam1Score(), getBallCount(), getCalledStrikes(), getCurrentOuts());
+  }
+}
